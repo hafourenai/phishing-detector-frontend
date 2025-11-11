@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Safety Checker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="hero-section">
+            <div class="icon-container">
+                <div class="security-icon">
+                    <div class="icon-outer-ring"></div>
+                    <div class="icon-inner-circle">
+                        <svg class="icon-svg" viewBox="0 0 24 24">
+                            <rect x="5" y="11" width="14" height="10" rx="2" ry="2"></rect>
+                            <path d="M12 7v4"></path>
+                            <path d="M7 7a5 5 0 0 1 10 0"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="security-icon">
+                    <div class="icon-outer-ring"></div>
+                    <div class="icon-inner-circle">
+                        <svg class="icon-svg" viewBox="0 0 24 24">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="M9 12l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <h1 class="hero-title">URL SAFETY CHECKER</h1>
+            <p class="hero-subtitle">Cek Keamanan Website Sebelum Mengunjunginya</p>
+        </div>
+
+        <div class="container">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <input type="text" id="urlInput" placeholder="Masukkan URL (contoh: https://google.com)" />
+                </div>
+                <button class="check-btn" id="checkBtn">
+                    <span id="btnText">🔍 Cek Sekarang</span>
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Menganalisis URL...</p>
+            </div>
+
+            <div class="result" id="result"></div>
+        </div>
+
+        <div class="education-section">
+            <div class="info-card">
+                <h3>⚠️ Pencegahan Dini</h3>
+                <div class="tips-grid-compact">
+                    <div class="tip-compact">
+                        <span>🔒</span>
+                        <p>Selalu cek HTTPS & ikon gembok</p>
+                    </div>
+                    <div class="tip-compact">
+                        <span>🔍</span>
+                        <p>Periksa ejaan URL dengan teliti</p>
+                    </div>
+                    <div class="tip-compact">
+                        <span>⚡</span>
+                        <p>Waspada pesan mendesak & mencurigakan</p>
+                    </div>
+                    <div class="tip-compact">
+                        <span>🛡️</span>
+                        <p>Jangan klik link dari sumber tidak dikenal</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>
+                Made with ❤️ by <strong>Hafourenai</strong>
+            </p>
+            <p style="font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.8;">
+                Powered by Google Safe Browsing & Telegram API
+            </p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
