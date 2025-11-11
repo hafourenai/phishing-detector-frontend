@@ -1,5 +1,5 @@
-const CONFIG = {
-    SERVER_URL: 'phising-detector-production.up.railway.app',
+    const CONFIG = {
+    SERVER_URL: 'https://phising-detector-production.up.railway.app',
     TECH_LINES_COUNT: 5,
     CIRCUIT_DOTS_COUNT: 30
 };
