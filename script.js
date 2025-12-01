@@ -1,9 +1,57 @@
 const CONFIG = {
     SERVER_URL: 'https://phising-detector-production.up.railway.app',
     TECH_LINES_COUNT: 5,
-    CIRCUIT_DOTS_COUNT: 30
+    CIRCUIT_DOTS_COUNT: 30,
+    FALLBACK_MODE: false,
+    REQUEST_TIMEOUT: 15000 // 15 seconds
 };
 
+// Helper: Fetch dengan timeout
+function fetchWithTimeout(url, options = {}, timeout = CONFIG.REQUEST_TIMEOUT) {
+    return Promise.race([
+        fetch(url, options),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Request timeout setelah ${timeout}ms`)), timeout)
+        )
+    ]);
+}
+
+// Helper: Test backend connection
+async function testBackendConnection() {
+    try {
+        console.log('🔗 Testing backend connection to:', CONFIG.SERVER_URL);
+        const response = await fetchWithTimeout(`${CONFIG.SERVER_URL}/health`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        }, 5000);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Backend connected successfully:', data);
+            return { 
+                connected: true, 
+                data: data,
+                message: 'Backend siap digunakan' 
+            };
+        } else {
+            console.warn('⚠️ Backend response not OK:', response.status);
+            return { 
+                connected: false, 
+                error: `HTTP ${response.status}: ${response.statusText}`,
+                message: 'Backend merespons dengan error'
+            };
+        }
+    } catch (error) {
+        console.error('❌ Backend connection failed:', error.message);
+        return { 
+            connected: false, 
+            error: error.message,
+            message: 'Tidak dapat terhubung ke backend server'
+        };
+    }
+}
+
+// Tech effects
 function initializeTechEffects() {
     for (let i = 0; i < CONFIG.TECH_LINES_COUNT; i++) {
         createTechLine('horizontal');
@@ -38,15 +86,17 @@ function createCircuitDot() {
     document.body.appendChild(dot);
 }
 
+// URL validation
 function isValidURL(url) {
     try {
-        new URL(url);
-        return url.startsWith('http://') || url.startsWith('https://');
+        const urlObj = new URL(url);
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
     } catch {
         return false;
     }
 }
 
+// Loading state
 function showLoading() {
     document.getElementById('loading').style.display = 'block';
     document.getElementById('result').style.display = 'none';
@@ -60,7 +110,59 @@ function hideLoading() {
     document.querySelector('.check-btn').disabled = false;
 }
 
-// Enhanced SSL HTML generator
+// Notification system
+function showNotification(message, type = 'info') {
+    // Remove existing notification
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    let icon = 'ℹ️';
+    if (type === 'error') icon = '❌';
+    if (type === 'success') icon = '✅';
+    if (type === 'warning') icon = '⚠️';
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.2em;">${icon}</span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Add styles
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? 'rgba(244, 67, 54, 0.95)' : 
+                    type === 'success' ? 'rgba(76, 175, 80, 0.95)' : 
+                    type === 'warning' ? 'rgba(255, 152, 0, 0.95)' : 
+                    'rgba(33, 150, 243, 0.95)'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+        max-width: 400px;
+        font-size: 0.95em;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 5000);
+}
+
+// Generate SSL HTML
 function generateSSLHTML(checks, url) {
     const ssl_info = checks?.ssl;
     
@@ -95,16 +197,11 @@ function generateSSLHTML(checks, url) {
         if (ssl_info.days_remaining < 30) daysColor = '#ff9800';
         if (ssl_info.days_remaining < 7) daysColor = '#f44336';
         
-        // Additional SSL info from enhanced backend
-        const tlsVersion = ssl_info.tls_version || 'Tidak diketahui';
-        const cipherSuite = ssl_info.cipher_suite || 'Tidak diketahui';
-        const sslStrength = ssl_info.ssl_strength || 'Tidak diketahui';
-        
         return `
             <div class="ssl-certificate-box">
                 <div class="ssl-header">
                     <span style="font-size: 1.3em;">🔒</span>
-                    <strong>Analisis Sertifikat SSL/TLS</strong>
+                    <strong>Informasi Sertifikat SSL</strong>
                 </div>
                 <div class="ssl-content">
                     <div class="ssl-status" style="background: ${statusColor};">
@@ -113,39 +210,25 @@ function generateSSLHTML(checks, url) {
                     <div class="ssl-info-grid">
                         <div class="ssl-info-item">
                             <span class="ssl-label">📝 Issued To:</span>
-                            <span class="ssl-value">${ssl_info.issued_to}</span>
+                            <span class="ssl-value">${ssl_info.issued_to || 'Tidak diketahui'}</span>
                         </div>
                         <div class="ssl-info-item">
                             <span class="ssl-label">🏢 Issuer:</span>
-                            <span class="ssl-value">${ssl_info.issuer}</span>
+                            <span class="ssl-value">${ssl_info.issuer || 'Tidak diketahui'}</span>
                         </div>
                         <div class="ssl-info-item">
                             <span class="ssl-label">📅 Valid From:</span>
-                            <span class="ssl-value">${ssl_info.valid_from}</span>
+                            <span class="ssl-value">${ssl_info.valid_from || 'Tidak diketahui'}</span>
                         </div>
                         <div class="ssl-info-item">
                             <span class="ssl-label">📅 Valid Until:</span>
-                            <span class="ssl-value">${ssl_info.valid_until}</span>
+                            <span class="ssl-value">${ssl_info.valid_until || 'Tidak diketahui'}</span>
                         </div>
                         <div class="ssl-info-item">
                             <span class="ssl-label">⏰ Sisa Waktu:</span>
                             <span class="ssl-value" style="color: ${daysColor}; font-weight: bold;">
-                                ${ssl_info.days_remaining} hari
+                                ${ssl_info.days_remaining !== undefined ? ssl_info.days_remaining + ' hari' : 'Tidak diketahui'}
                                 ${ssl_info.days_remaining < 30 ? ' ⚠️' : ' ✅'}
-                            </span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">🔐 TLS Version:</span>
-                            <span class="ssl-value">${tlsVersion}</span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">⚡ Cipher Suite:</span>
-                            <span class="ssl-value">${cipherSuite}</span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">🛡️ SSL Strength:</span>
-                            <span class="ssl-value" style="color: ${sslStrength === 'strong' ? '#4caf50' : '#ff9800'}">
-                                ${sslStrength === 'strong' ? '✅ Kuat' : '⚠️ Lemah'}
                             </span>
                         </div>
                     </div>
@@ -164,8 +247,8 @@ function generateSSLHTML(checks, url) {
                         ❌ Sertifikat Tidak Valid
                     </div>
                     <div style="color: rgba(255, 255, 255, 0.9); line-height: 1.6; font-size: 0.9em;">
-                        <strong>Error:</strong> ${ssl_info.message}<br/>
-                        <small style="opacity: 0.8;">${ssl_info.error || 'Tidak dapat memverifikasi sertifikat SSL'}</small>
+                        <strong>Error:</strong> ${ssl_info.message || 'Tidak dapat memverifikasi SSL'}<br/>
+                        ${ssl_info.error ? `<small style="opacity: 0.8;">${ssl_info.error}</small>` : ''}
                     </div>
                 </div>
             </div>
@@ -173,303 +256,7 @@ function generateSSLHTML(checks, url) {
     }
 }
 
-// New function for DNS Analysis
-function generateDNSHTML(checks) {
-    const dns_info = checks?.dns;
-    
-    if (!dns_info || !dns_info.success) return '';
-    
-    let dnsHTML = `
-        <div class="ssl-certificate-box" style="margin-top: 15px;">
-            <div class="ssl-header">
-                <span style="font-size: 1.3em;">🌐</span>
-                <strong>Analisis DNS</strong>
-            </div>
-            <div class="ssl-content">
-    `;
-    
-    // DNS Issues
-    if (dns_info.issues && dns_info.issues.length > 0) {
-        dnsHTML += `
-            <div class="ssl-status" style="background: #ff9800; margin-bottom: 15px;">
-                ⚠️ ${dns_info.issues.length} masalah DNS ditemukan
-            </div>
-        `;
-    }
-    
-    // DNS Records
-    const records = dns_info.records || {};
-    if (Object.keys(records).length > 0) {
-        dnsHTML += '<div class="ssl-info-grid">';
-        
-        if (records.A && records.A.length > 0) {
-            dnsHTML += `
-                <div class="ssl-info-item">
-                    <span class="ssl-label">📍 IP Address:</span>
-                    <span class="ssl-value">${records.A.join(', ')}</span>
-                </div>
-            `;
-        }
-        
-        if (records.MX && records.MX.length > 0) {
-            dnsHTML += `
-                <div class="ssl-info-item">
-                    <span class="ssl-label">📧 Mail Server:</span>
-                    <span class="ssl-value">${records.MX.join(', ')}</span>
-                </div>
-            `;
-        }
-        
-        if (records.NS && records.NS.length > 0) {
-            dnsHTML += `
-                <div class="ssl-info-item">
-                    <span class="ssl-label">🌐 Name Servers:</span>
-                    <span class="ssl-value">${records.NS.join(', ')}</span>
-                </div>
-            `;
-        }
-        
-        dnsHTML += '</div>';
-    }
-    
-    dnsHTML += '</div></div>';
-    return dnsHTML;
-}
-
-// New function for WHOIS Analysis
-function generateWHOISHTML(checks) {
-    const whois_info = checks?.whois;
-    
-    if (!whois_info || !whois_info.success) return '';
-    
-    const age_days = whois_info.age_days;
-    const registrar = whois_info.registrar || 'Tidak diketahui';
-    const creation_date = whois_info.creation_date || 'Tidak diketahui';
-    
-    let ageColor = '#4caf50';
-    let ageIcon = '✅';
-    let ageStatus = 'Baik';
-    
-    if (age_days < 7) {
-        ageColor = '#f44336';
-        ageIcon = '🚨';
-        ageStatus = 'Sangat Baru (Risk Tinggi)';
-    } else if (age_days < 30) {
-        ageColor = '#ff9800';
-        ageIcon = '⚠️';
-        ageStatus = 'Baru (Mencurigakan)';
-    } else if (age_days < 365) {
-        ageColor = '#ff9800';
-        ageIcon = '📅';
-        ageStatus = 'Relatif Baru';
-    }
-    
-    return `
-        <div class="ssl-certificate-box" style="margin-top: 15px;">
-            <div class="ssl-header">
-                <span style="font-size: 1.3em;">📅</span>
-                <strong>Informasi Domain (WHOIS)</strong>
-            </div>
-            <div class="ssl-content">
-                <div class="ssl-info-grid">
-                    <div class="ssl-info-item">
-                        <span class="ssl-label">${ageIcon} Usia Domain:</span>
-                        <span class="ssl-value" style="color: ${ageColor}; font-weight: bold;">
-                            ${age_days} hari (${ageStatus})
-                        </span>
-                    </div>
-                    <div class="ssl-info-item">
-                        <span class="ssl-label">🏢 Registrar:</span>
-                        <span class="ssl-value">${registrar}</span>
-                    </div>
-                    <div class="ssl-info-item">
-                        <span class="ssl-label">📅 Tanggal Pembuatan:</span>
-                        <span class="ssl-value">${creation_date}</span>
-                    </div>
-                </div>
-                ${whois_info.issues && whois_info.issues.length > 0 ? `
-                    <div style="margin-top: 15px; padding: 10px; background: rgba(244, 67, 54, 0.1); border-radius: 8px; border-left: 4px solid #f44336;">
-                        <strong style="color: #f44336;">⚠️ Issues:</strong>
-                        <ul style="margin: 5px 0 0 15px; color: rgba(255, 255, 255, 0.9); font-size: 0.9em;">
-                            ${whois_info.issues.map(issue => `<li>${issue}</li>`).join('')}
-                        </ul>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
-
-// Enhanced API Results Display
-function generateAPIResultsHTML(checks) {
-    let html = '';
-    
-    // VirusTotal
-    const vt_data = checks?.virustotal;
-    if (vt_data && vt_data.success) {
-        const vtColor = vt_data.malicious > 0 ? '#f44336' : '#4caf50';
-        const vtIcon = vt_data.malicious > 0 ? '🚨' : '✅';
-        
-        html += `
-            <div class="ssl-certificate-box" style="margin-top: 15px;">
-                <div class="ssl-header">
-                    <span style="font-size: 1.3em;">🛡️</span>
-                    <strong>VirusTotal Analysis</strong>
-                </div>
-                <div class="ssl-content">
-                    <div class="ssl-status" style="background: ${vtColor};">
-                        ${vtIcon} ${vt_data.malicious > 0 ? 
-                            `${vt_data.malicious} engine mendeteksi malicious` : 
-                            'Tidak ditemukan ancaman'}
-                    </div>
-                    <div class="ssl-info-grid">
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">🚫 Malicious:</span>
-                            <span class="ssl-value" style="color: ${vt_data.malicious > 0 ? '#f44336' : '#4caf50'}">
-                                ${vt_data.malicious}
-                            </span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">⚠️ Suspicious:</span>
-                            <span class="ssl-value" style="color: #ff9800">
-                                ${vt_data.suspicious || 0}
-                            </span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">✅ Harmless:</span>
-                            <span class="ssl-value" style="color: #4caf50">
-                                ${vt_data.harmless || 0}
-                            </span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">🔢 Total Engines:</span>
-                            <span class="ssl-value">${vt_data.total_engines || 0}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // IPQualityScore
-    const ipqs_data = checks?.ipqualityscore;
-    if (ipqs_data && ipqs_data.success) {
-        const riskScore = ipqs_data.risk_score || 0;
-        let riskColor = '#4caf50';
-        let riskLevel = 'Rendah';
-        
-        if (riskScore > 70) {
-            riskColor = '#f44336';
-            riskLevel = 'Sangat Tinggi';
-        } else if (riskScore > 50) {
-            riskColor = '#ff9800';
-            riskLevel = 'Tinggi';
-        } else if (riskScore > 30) {
-            riskColor = '#ffeb3b';
-            riskLevel = 'Sedang';
-        }
-        
-        html += `
-            <div class="ssl-certificate-box" style="margin-top: 15px;">
-                <div class="ssl-header">
-                    <span style="font-size: 1.3em;">📊</span>
-                    <strong>IPQualityScore Reputation</strong>
-                </div>
-                <div class="ssl-content">
-                    <div class="ssl-status" style="background: ${riskColor};">
-                        ${riskScore > 50 ? '⚠️' : '✅'} Risk Score: ${riskScore}/100 (${riskLevel})
-                    </div>
-                    <div class="ssl-info-grid">
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">🎭 Phishing:</span>
-                            <span class="ssl-value" style="color: ${ipqs_data.phishing ? '#f44336' : '#4caf50'}">
-                                ${ipqs_data.phishing ? '✅ Terdeteksi' : '❌ Tidak terdeteksi'}
-                            </span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">🦠 Malware:</span>
-                            <span class="ssl-value" style="color: ${ipqs_data.malware ? '#f44336' : '#4caf50'}">
-                                ${ipqs_data.malware ? '✅ Terdeteksi' : '❌ Tidak terdeteksi'}
-                            </span>
-                        </div>
-                        <div class="ssl-info-item">
-                            <span class="ssl-label">🤔 Suspicious:</span>
-                            <span class="ssl-value" style="color: ${ipqs_data.suspicious ? '#ff9800' : '#4caf50'}">
-                                ${ipqs_data.suspicious ? '✅ Ya' : '❌ Tidak'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // RapidAPI Phishing
-    const rapidapi_data = checks?.rapidapi_phishing;
-    if (rapidapi_data && rapidapi_data.success) {
-        const phishingData = rapidapi_data.data || {};
-        if (phishingData.is_phishing) {
-            html += `
-                <div class="ssl-certificate-box" style="margin-top: 15px;">
-                    <div class="ssl-header">
-                        <span style="font-size: 1.3em;">🔍</span>
-                        <strong>Phishing Risk API</strong>
-                    </div>
-                    <div class="ssl-content">
-                        <div class="ssl-status" style="background: #f44336;">
-                            🚨 Terdeteksi sebagai Phishing
-                        </div>
-                        <div style="color: rgba(255, 255, 255, 0.9); padding: 10px; background: rgba(244, 67, 54, 0.1); border-radius: 8px; font-size: 0.9em;">
-                            Confidence: ${phishingData.confidence || 'N/A'}%<br>
-                            Risk Level: ${phishingData.risk_level || 'N/A'}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    return html;
-}
-
-// Enhanced function for Telegram HTML
-function generateTelegramHTML(checks) {
-    const telegram = checks?.telegram;
-    
-    if (!telegram) return '';
-    
-    const isOfficial = telegram.is_official;
-    const statusColor = isOfficial ? '#4caf50' : '#f44336';
-    const statusIcon = isOfficial ? '✅' : '❌';
-    
-    return `
-        <div class="ssl-certificate-box" style="margin-top: 15px;">
-            <div class="ssl-header">
-                <span style="font-size: 1.3em;">📱</span>
-                <strong>Verifikasi Telegram Bot</strong>
-            </div>
-            <div class="ssl-content">
-                <div class="ssl-status" style="background: ${statusColor};">
-                    ${statusIcon} ${telegram.status}
-                </div>
-                <div class="ssl-info-grid">
-                    <div class="ssl-info-item">
-                        <span class="ssl-label">👤 Username:</span>
-                        <span class="ssl-value">@${telegram.username}</span>
-                    </div>
-                    <div class="ssl-info-item">
-                        <span class="ssl-label">🔍 Status:</span>
-                        <span class="ssl-value" style="color: ${statusColor};">
-                            ${isOfficial ? 'Bot Resmi Terdaftar' : 'Bot Tidak Resmi / Tidak Ditemukan'}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// Enhanced issues display
+// Generate Issues HTML
 function generateIssuesHTML(issues, warnings) {
     let html = '';
     
@@ -511,38 +298,79 @@ function generateIssuesHTML(issues, warnings) {
     return html;
 }
 
-// Enhanced result display
+// Generate Telegram HTML
+function generateTelegramHTML(checks) {
+    const telegram = checks?.telegram;
+    
+    if (!telegram) return '';
+    
+    const isOfficial = telegram.is_official;
+    const statusColor = isOfficial ? '#4caf50' : '#f44336';
+    const statusIcon = isOfficial ? '✅' : '❌';
+    
+    return `
+        <div class="ssl-certificate-box" style="margin-top: 15px;">
+            <div class="ssl-header">
+                <span style="font-size: 1.3em;">📱</span>
+                <strong>Verifikasi Telegram Bot</strong>
+            </div>
+            <div class="ssl-content">
+                <div class="ssl-status" style="background: ${statusColor};">
+                    ${statusIcon} ${telegram.status || 'Status tidak diketahui'}
+                </div>
+                <div class="ssl-info-grid">
+                    <div class="ssl-info-item">
+                        <span class="ssl-label">👤 Username:</span>
+                        <span class="ssl-value">@${telegram.username || 'tidak-diketahui'}</span>
+                    </div>
+                    <div class="ssl-info-item">
+                        <span class="ssl-label">🔍 Status:</span>
+                        <span class="ssl-value" style="color: ${statusColor};">
+                            ${isOfficial ? 'Bot Resmi Terdaftar' : 'Bot Tidak Resmi / Tidak Ditemukan'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Display Result
 function displayResult(data) {
     const resultDiv = document.getElementById('result');
     const { url, risk_score, status, status_class, issues, warnings, checks, confidence, recommendation } = data;
 
     let icon, advice, headerClass;
     
-    switch(status_class) {
+    // Handle both old and new status_class formats
+    const statusClass = status_class || 'unknown';
+    
+    switch(statusClass.toLowerCase()) {
         case 'critical':
-            icon = '🚨';
-            advice = 'JANGAN BUKA LINK INI! Website ini sangat berbahaya dan terdeteksi sebagai phishing.';
-            headerClass = 'danger';
-            break;
         case 'danger':
-            icon = '🚫';
-            advice = 'Hindari website ini! Ada indikasi kuat bahwa website ini berbahaya.';
+            icon = '🚨';
+            advice = 'JANGAN BUKA LINK INI! Website ini sangat berbahaya.';
             headerClass = 'danger';
             break;
         case 'warning':
             icon = '⚠️';
-            advice = 'Berhati-hatilah! Ada beberapa indikator mencurigakan pada website ini.';
+            advice = 'Berhati-hatilah! Ada beberapa indikator mencurigakan.';
             headerClass = 'warning';
             break;
         case 'caution':
             icon = '🔶';
-            advice = 'Secara umum aman, tapi tetap perhatikan URL dan jangan masukkan data sensitif.';
+            advice = 'Secara umum aman, tapi tetap waspada.';
             headerClass = 'warning';
             break;
-        default:
+        case 'safe':
             icon = '✅';
-            advice = 'Website ini terlihat aman untuk dikunjungi berdasarkan analisis kami.';
+            advice = 'Website ini terlihat aman untuk dikunjungi.';
             headerClass = 'safe';
+            break;
+        default:
+            icon = '❓';
+            advice = 'Status tidak dapat ditentukan.';
+            headerClass = 'warning';
     }
 
     // Use recommendation from backend if available
@@ -551,9 +379,6 @@ function displayResult(data) {
     resultDiv.className = `result ${headerClass}`;
     
     const sslHTML = generateSSLHTML(checks, url);
-    const dnsHTML = generateDNSHTML(checks);
-    const whoisHTML = generateWHOISHTML(checks);
-    const apiHTML = generateAPIResultsHTML(checks);
     const telegramHTML = generateTelegramHTML(checks);
     const issuesHTML = generateIssuesHTML(issues, warnings);
     
@@ -570,52 +395,50 @@ function displayResult(data) {
         <div class="result-header">
             <div>
                 <div class="result-icon">${icon}</div>
-                <h2>${status}</h2>
+                <h2>${status || 'Hasil Analisis'}</h2>
                 <p style="font-size: 0.9em; opacity: 0.8; margin-top: 5px;">${finalAdvice}</p>
             </div>
             <div class="score-circle" style="position: relative;">
-                ${risk_score}
+                ${risk_score !== undefined ? risk_score : 'N/A'}
                 <div style="position: absolute; bottom: -25px; width: 100%; text-align: center; font-size: 0.7em; color: rgba(255, 255, 255, 0.7);">
-                    Score
+                    Risk Score
                 </div>
             </div>
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
-            <div style="text-align: center;">
-                <div style="font-size: 0.8em; opacity: 0.7;">Confidence</div>
-                <div style="font-size: 1.2em; font-weight: bold; color: #64c8ff;">${confidence || checkSuccessRate}%</div>
+        ${confidence !== undefined ? `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px; background: rgba(0, 0, 0, 0.3); border-radius: 8px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.8em; opacity: 0.7;">Confidence</div>
+                    <div style="font-size: 1.2em; font-weight: bold; color: #64c8ff;">${confidence}%</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.8em; opacity: 0.7;">Total Checks</div>
+                    <div style="font-size: 1.2em; font-weight: bold; color: #64c8ff;">${totalChecks}</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.8em; opacity: 0.7;">Successful</div>
+                    <div style="font-size: 1.2em; font-weight: bold; color: #4caf50;">${successfulChecks}</div>
+                </div>
             </div>
-            <div style="text-align: center;">
-                <div style="font-size: 0.8em; opacity: 0.7;">Total Checks</div>
-                <div style="font-size: 1.2em; font-weight: bold; color: #64c8ff;">${totalChecks}</div>
-            </div>
-            <div style="text-align: center;">
-                <div style="font-size: 0.8em; opacity: 0.7;">Successful</div>
-                <div style="font-size: 1.2em; font-weight: bold; color: #4caf50;">${successfulChecks}</div>
-            </div>
-        </div>
+        ` : ''}
         
         <div class="details-box">
             <strong>🔗 URL yang dicek:</strong><br/>
             <span style="word-break: break-all; font-family: monospace; font-size: 0.9em;">${url}</span>
             <div style="margin-top: 5px; font-size: 0.85em; opacity: 0.7;">
-                Hostname: ${data.hostname || url.split('/')[2]}
+                Hostname: ${data.hostname || url.split('/')[2] || 'Tidak diketahui'}
             </div>
         </div>
         
         ${sslHTML}
-        ${dnsHTML}
-        ${whoisHTML}
-        ${apiHTML}
         ${telegramHTML}
         ${issuesHTML}
         
         <div style="margin-top: 20px; padding: 15px; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); border-radius: 10px; text-align: center; font-size: 0.85em; border: 1px solid rgba(100, 200, 255, 0.15); color: rgba(255, 255, 255, 0.8);">
-            🔐 <strong style="color: #64c8ff;">SUPER ENHANCED ANALYSIS</strong><br/>
+            🔐 <strong style="color: #64c8ff;">URL SAFETY CHECKER</strong><br/>
             <small style="opacity: 0.7; margin-top: 6px; display: block; font-size: 0.8em;">
-                • VirusTotal (70+ engines) • IPQualityScore • Google Safe Browsing<br/>
-                • WHOIS Analysis • DNS Analysis • SSL Certificate Analysis • Content Analysis
+                Analisis berbasis: SSL Certificate + Google Safe Browsing + Telegram Verification + Pattern Analysis
             </small>
         </div>
     `;
@@ -628,7 +451,60 @@ function displayResult(data) {
     }, 300);
 }
 
-// Enhanced error handling
+// FALLBACK MODE - Used when backend is down
+function runFallbackAnalysis(url) {
+    console.log('🔄 Running fallback analysis for:', url);
+    
+    // Simple heuristic analysis in frontend
+    let riskScore = 30;
+    let issues = [];
+    let warnings = [];
+    
+    // Basic checks
+    if (!url.startsWith('https://')) {
+        riskScore += 25;
+        issues.push('Website tidak menggunakan HTTPS');
+    }
+    
+    if (url.includes('t.me/') || url.includes('telegram.me/')) {
+        warnings.push('Link Telegram - verifikasi manual diperlukan');
+    }
+    
+    if (url.length > 100) {
+        riskScore += 10;
+        warnings.push('URL terlalu panjang');
+    }
+    
+    // Determine status
+    let status, statusClass;
+    if (riskScore >= 70) {
+        status = '⚠️ BERBAHAYA (Fallback Mode)';
+        statusClass = 'danger';
+    } else if (riskScore >= 40) {
+        status = '🔶 WASPADA (Fallback Mode)';
+        statusClass = 'warning';
+    } else {
+        status = '✅ AMAN (Fallback Mode)';
+        statusClass = 'safe';
+    }
+    
+    return {
+        url: url,
+        risk_score: riskScore,
+        status: status,
+        status_class: statusClass,
+        issues: issues,
+        warnings: warnings,
+        checks: {
+            heuristic: { score: riskScore, issues: issues },
+            ssl: { success: false, message: 'Fallback mode - SSL tidak dicek' }
+        },
+        confidence: 50,
+        recommendation: 'Analisis dalam mode fallback. Backend sedang offline.'
+    };
+}
+
+// MAIN FUNCTION - Check URL
 async function checkURL() {
     const urlInput = document.getElementById('urlInput');
     const url = urlInput.value.trim();
@@ -646,206 +522,289 @@ async function checkURL() {
     showLoading();
 
     try {
-        const response = await fetch(`${CONFIG.SERVER_URL}/check`, {
+        console.log(`🔄 Mengirim request ke: ${CONFIG.SERVER_URL}/check`);
+        console.log(`📡 URL yang dicek: ${url}`);
+        
+        const response = await fetchWithTimeout(`${CONFIG.SERVER_URL}/check`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({ url: url })
         });
 
+        console.log(`📥 Response status: ${response.status} ${response.statusText}`);
+        
+        // Handle non-200 responses
         if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.error || `Server error: ${response.status}`);
+            let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+            let errorDetail = '';
+            
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorData.message || errorMessage;
+                errorDetail = JSON.stringify(errorData, null, 2);
+            } catch (e) {
+                // If response is not JSON, read as text
+                try {
+                    const text = await response.text();
+                    if (text) {
+                        errorDetail = text.substring(0, 200);
+                        errorMessage = `Server error ${response.status}: ${text.substring(0, 100)}...`;
+                    }
+                } catch (textError) {
+                    errorDetail = 'Tidak dapat membaca response body';
+                }
+            }
+            
+            console.error('❌ Server error details:', errorDetail);
+            
+            // If server is down, offer fallback mode
+            if (response.status >= 500) {
+                const useFallback = confirm(
+                    `Server mengalami error (${response.status}).\n` +
+                    `Ingin menggunakan analisis fallback mode?\n\n` +
+                    `Detail: ${errorMessage}`
+                );
+                
+                if (useFallback) {
+                    const fallbackResult = runFallbackAnalysis(url);
+                    displayResult(fallbackResult);
+                    showNotification('⚠️ Menggunakan fallback mode', 'warning');
+                    hideLoading();
+                    return;
+                }
+            }
+            
+            throw new Error(errorMessage);
         }
 
+        // Parse successful response
         const data = await response.json();
+        console.log('✅ Response berhasil diterima:', data);
+        
+        // Validate response structure
+        if (!data || typeof data !== 'object') {
+            throw new Error('Response tidak valid dari server');
+        }
+        
         displayResult(data);
         
-        // Show success notification
+        // Show appropriate notification
         if (data.status_class === 'safe') {
             showNotification('✅ Website terdeteksi aman!', 'success');
         } else if (data.status_class === 'critical' || data.status_class === 'danger') {
             showNotification('🚨 Website berbahaya terdeteksi!', 'error');
+        } else {
+            showNotification('⚠️ Hasil analisis siap', 'warning');
         }
 
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error selama proses check:', error);
         
+        // Display detailed error to user
         const resultDiv = document.getElementById('result');
         resultDiv.className = 'result danger';
-        resultDiv.innerHTML = `
+        
+        const errorHtml = `
             <div class="result-header">
                 <div>
-                    <div class="result-icon">❌</div>
-                    <h2>Gagal Terhubung</h2>
+                    <div class="result-icon">⚠️</div>
+                    <h2>Terjadi Kesalahan</h2>
                 </div>
             </div>
             <div class="issues-list">
-                <h3>🔍 Error:</h3>
-                <div class="issue-item" style="color: rgba(255, 255, 255, 0.9);">
-                    ${error.message}
+                <h3>🔍 Detail Error:</h3>
+                <div class="issue-item">
+                    <strong>Pesan:</strong> ${error.message || 'Unknown error'}
+                </div>
+                <div class="issue-item">
+                    <strong>Endpoint:</strong> ${CONFIG.SERVER_URL}/check
+                </div>
+                <div class="issue-item">
+                    <strong>URL yang dicek:</strong> ${url}
                 </div>
             </div>
-            <div style="margin-top: 15px; padding: 15px; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); border-radius: 10px; font-size: 0.9em; border: 1px solid rgba(100, 200, 255, 0.1); color: rgba(255, 255, 255, 0.8);">
-                <strong>💡 Tips:</strong><br/>
-                • Pastikan backend sudah di-deploy di Railway<br/>
-                • Cek apakah URL di CONFIG.SERVER_URL sudah benar<br/>
-                • Server URL: ${CONFIG.SERVER_URL}
+            <div style="margin-top: 15px; padding: 15px; background: rgba(0, 0, 0, 0.3); border-radius: 10px; font-size: 0.9em; border: 1px solid rgba(100, 200, 255, 0.1); color: rgba(255, 255, 255, 0.8);">
+                <strong>💡 Langkah Troubleshooting:</strong><br/>
+                1. Cek koneksi internet Anda<br/>
+                2. Verifikasi backend server berjalan di <a href="${CONFIG.SERVER_URL}/health" target="_blank" style="color: #64c8ff;">${CONFIG.SERVER_URL}/health</a><br/>
+                3. Coba URL yang berbeda (contoh: https://google.com)<br/>
+                4. Hubungi administrator jika masalah berlanjut
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button id="retryBtn" style="background: #64c8ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                    🔄 Coba Lagi
+                </button>
+                <button id="fallbackBtn" style="background: #ff9800; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-left: 10px; font-weight: bold;">
+                    🛡️ Gunakan Fallback Mode
+                </button>
             </div>
         `;
+        
+        resultDiv.innerHTML = errorHtml;
         resultDiv.style.display = 'block';
         
-        showNotification('❌ Gagal menghubungi server', 'error');
+        // Add event listeners to buttons
+        setTimeout(() => {
+            const retryBtn = document.getElementById('retryBtn');
+            const fallbackBtn = document.getElementById('fallbackBtn');
+            
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                    resultDiv.style.display = 'none';
+                    checkURL();
+                });
+            }
+            
+            if (fallbackBtn) {
+                fallbackBtn.addEventListener('click', () => {
+                    const fallbackResult = runFallbackAnalysis(url);
+                    displayResult(fallbackResult);
+                    showNotification('⚠️ Menggunakan fallback mode', 'warning');
+                });
+            }
+        }, 100);
+        
+        showNotification('❌ Gagal menganalisis URL', 'error');
+        
     } finally {
         hideLoading();
     }
 }
 
-// Add notification system
-function showNotification(message, type = 'info') {
-    // Remove existing notification
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
+// Initialize application
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 URL Safety Checker initialized');
+    console.log('📡 Backend URL:', CONFIG.SERVER_URL);
+    
+    // Initialize tech effects
+    initializeTechEffects();
+    
+    // Test backend connection on startup
+    testBackendConnection().then(result => {
+        if (result.connected) {
+            console.log('✅ Backend connection test passed');
+            showNotification('✅ Backend server terhubung', 'success', 3000);
+        } else {
+            console.warn('⚠️ Backend connection test failed:', result.error);
+            showNotification('⚠️ Backend server tidak terhubung', 'warning', 5000);
+            
+            // Optionally enable fallback mode
+            const enableFallback = confirm(
+                'Backend server tidak dapat dihubungi.\n' +
+                'Aktifkan fallback mode untuk analisis dasar?\n\n' +
+                'Error: ' + result.error
+            );
+            
+            if (enableFallback) {
+                CONFIG.FALLBACK_MODE = true;
+                showNotification('🛡️ Fallback mode diaktifkan', 'info');
+            }
+        }
+    }).catch(error => {
+        console.error('❌ Error testing backend:', error);
+    });
+    
+    // Setup event listeners
+    const checkBtn = document.getElementById('checkBtn');
+    const urlInput = document.getElementById('urlInput');
+    
+    if (checkBtn) {
+        checkBtn.addEventListener('click', checkURL);
     }
     
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.2em;">${type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️'}</span>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    // Add styles
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'error' ? 'rgba(244, 67, 54, 0.9)' : type === 'success' ? 'rgba(76, 175, 80, 0.9)' : 'rgba(33, 150, 243, 0.9)'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-        animation: slideIn 0.3s ease-out;
-        max-width: 400px;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => notification.remove(), 300);
-    }, 5000);
-}
-
-// Add CSS animations for notification
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
-
-async function checkServerHealth() {
-    try {
-        const response = await fetch(`${CONFIG.SERVER_URL}/health`, {
-            method: 'GET'
+    if (urlInput) {
+        // Enter key support
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkURL();
+            }
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Server terhubung dengan baik!', data);
-            console.log('📡 Backend URL:', CONFIG.SERVER_URL);
+        // Visual feedback
+        urlInput.addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            const inputElement = e.target;
             
-            // Show server status in console
-            if (data.api_status) {
-                console.log('📊 API Status:', data.api_status);
+            if (url === '') {
+                inputElement.style.borderColor = 'rgba(100, 200, 255, 0.3)';
+                inputElement.style.boxShadow = 'none';
+                return;
             }
-        } else {
-            console.warn('⚠️ Server merespons tapi ada error:', response.status);
-        }
-    } catch (error) {
-        console.warn('⚠️ Tidak dapat terhubung ke server');
-        console.warn('💡 Pastikan backend sudah deploy di Railway');
-        console.warn('🔧 Server URL:', CONFIG.SERVER_URL);
-    }
-}
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 SUPER ENHANCED URL Safety Checker initialized');
-    console.log('📡 Backend:', CONFIG.SERVER_URL);
-    
-    initializeTechEffects();
-    checkServerHealth();
-
-    document.getElementById('checkBtn').addEventListener('click', checkURL);
-
-    document.getElementById('urlInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            checkURL();
-        }
-    });
-    
-    // Enhanced visual feedback pada input
-    document.getElementById('urlInput').addEventListener('input', (e) => {
-        const url = e.target.value.trim();
-        const inputElement = e.target;
+            
+            if (isValidURL(url)) {
+                inputElement.style.borderColor = '#4caf50';
+                inputElement.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.2)';
+            } else {
+                inputElement.style.borderColor = '#f44336';
+                inputElement.style.boxShadow = '0 0 0 2px rgba(244, 67, 54, 0.2)';
+            }
+        });
         
-        if (url === '') {
-            inputElement.style.borderColor = 'rgba(100, 200, 255, 0.3)';
-            return;
-        }
-        
-        if (isValidURL(url)) {
-            inputElement.style.borderColor = '#4caf50';
-            inputElement.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.2)';
-        } else {
-            inputElement.style.borderColor = '#f44336';
-            inputElement.style.boxShadow = '0 0 0 2px rgba(244, 67, 54, 0.2)';
-        }
-    });
-    
-    // Add example URLs for testing
-    document.getElementById('urlInput').addEventListener('focus', () => {
+        // Example URL rotation
         const examples = [
             'https://google.com',
             'https://facebook.com',
-            'https://example.com'
+            'https://github.com',
+            'https://t.me/examplebot'
         ];
         
-        // Add placeholder rotation
-        const input = document.getElementById('urlInput');
         let exampleIndex = 0;
-        
         setInterval(() => {
-            input.placeholder = `Contoh: ${examples[exampleIndex]}`;
-            exampleIndex = (exampleIndex + 1) % examples.length;
+            if (!urlInput.value && document.activeElement !== urlInput) {
+                urlInput.placeholder = `Contoh: ${examples[exampleIndex]}`;
+                exampleIndex = (exampleIndex + 1) % examples.length;
+            }
         }, 3000);
-    });
+    }
+    
+    // Add CSS for notifications if not already present
+    if (!document.querySelector('style#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes pulseGlow {
+                0%, 100% { 
+                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3), 0 0 0 rgba(100, 200, 255, 0.5);
+                }
+                50% { 
+                    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(100, 200, 255, 0.8);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 });
+
+// Export for testing if needed
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        isValidURL,
+        checkURL,
+        testBackendConnection
+    };
+}
