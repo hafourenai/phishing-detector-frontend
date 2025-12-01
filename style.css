@@ -672,3 +672,218 @@ input[type="text"]:focus {
         font-size: 0.9rem;
     }
 }
+
+.disclaimer-box {
+    margin-top: 1.5rem;
+    padding: 1.2rem;
+    background: rgba(255, 247, 237, 0.1);
+    backdrop-filter: blur(10px);
+    border-left: 4px solid rgba(245, 158, 11, 0.6);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    animation: fadeInUp 0.6s ease-out 0.4s both;
+}
+
+.disclaimer-title {
+    font-weight: 600;
+    color: #fbbf24;
+    margin-bottom: 0.5rem;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.disclaimer-text {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Responsive Design untuk Disclaimer */
+@media (max-width: 768px) {
+    .disclaimer-box {
+        padding: 1rem;
+        margin-top: 1.2rem;
+    }
+    
+    .disclaimer-title {
+        font-size: 0.9em;
+    }
+    
+    .disclaimer-text {
+        font-size: 0.8rem;
+    }
+}
+
+/* Add these styles to your existing style.css */
+
+/* Critical status */
+.result.critical {
+    background: linear-gradient(135deg, rgba(183, 28, 28, 0.2) 0%, rgba(136, 14, 79, 0.2) 100%);
+    border-color: rgba(183, 28, 28, 0.4);
+    box-shadow: 0 0 40px rgba(183, 28, 28, 0.3);
+}
+
+/* Caution status */
+.result.caution {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 160, 0, 0.2) 100%);
+    border-color: rgba(255, 193, 7, 0.4);
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.2);
+}
+
+/* New notification styles */
+.notification {
+    transition: all 0.3s ease;
+}
+
+/* Enhanced score circle */
+.score-circle {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(100, 200, 255, 0.15);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    font-weight: 700;
+    color: #64c8ff;
+    border: 2px solid rgba(100, 200, 255, 0.4);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { 
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3), 0 0 0 rgba(100, 200, 255, 0.5);
+    }
+    50% { 
+        box-shadow: 0 5px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(100, 200, 255, 0.8);
+    }
+}
+
+/* Enhanced info boxes */
+.ssl-certificate-box {
+    animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: 600;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.status-badge.critical {
+    background: #d32f2f;
+    color: white;
+}
+
+.status-badge.high {
+    background: #f57c00;
+    color: white;
+}
+
+.status-badge.medium {
+    background: #ff9800;
+    color: white;
+}
+
+.status-badge.low {
+    background: #4caf50;
+    color: white;
+}
+
+/* Loading animation enhancements */
+.spinner {
+    border: 3px solid rgba(100, 200, 255, 0.2);
+    border-top: 3px solid #64c8ff;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+    box-shadow: 0 0 15px rgba(100, 200, 255, 0.5);
+    position: relative;
+}
+
+.spinner::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-radius: 50%;
+    background: conic-gradient(transparent, rgba(100, 200, 255, 0.8));
+    animation: spin 1.5s linear infinite reverse;
+    opacity: 0.3;
+}
+
+/* Progress indicator for checks */
+.progress-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.check-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    background: rgba(100, 200, 255, 0.1);
+}
+
+.check-item.success {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.check-item.error {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+/* Responsive improvements for new content */
+@media (max-width: 768px) {
+    .ssl-info-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .progress-indicator {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .score-circle {
+        width: 70px;
+        height: 70px;
+        font-size: 1.5em;
+    }
+}
