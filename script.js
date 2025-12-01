@@ -804,7 +804,7 @@ function displayResult(data) {
             <div class="confidence-content">
                 <span class="confidence-icon">🎯</span>
                 <div>
-                    <strong>Detection Accuracy: 99%</strong>
+                    <strong>Detection Accuracy: 80%</strong>
                     <small>Powered by 6+ security APIs, AI algorithms, and real-time threat intelligence</small>
                 </div>
             </div>
@@ -1110,7 +1110,7 @@ async function checkServerHealth() {
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🚀 Advanced Phishing Detector Initialized");
   console.log("📡 Backend Server:", CONFIG.SERVER_URL);
-  console.log("🎯 Target Accuracy: 99%");
+  console.log("🎯 Target Accuracy: 80%");
 
   // Initialize visual effects
   initializeTechEffects();
@@ -1180,7 +1180,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Log initialization complete
   console.log("✅ Application ready for analysis");
-  console.log("✨ Features: Multi-API, AI Analysis, 99% Accuracy");
+  console.log("✨ Features: Multi-API, AI Analysis, 80% Accuracy");
 });
 
 // Service Worker for offline functionality (optional)
