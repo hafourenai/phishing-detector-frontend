@@ -535,7 +535,7 @@ function generateDetailedAnalysisHTML(checks, score_breakdown) {
                     <div class="api-details">
                         <span>Risk Score: ${(
                           (ipq.risk_score || 0) * 10
-                        ).toFixed(1)}/100</span>
+                        ).toFixed(1)}</span>
                         <span>Phishing: ${ipq.phishing ? "Yes" : "No"}</span>
                         <span>Malware: ${ipq.malware ? "Yes" : "No"}</span>
                         <span>Suspicious: ${
@@ -759,7 +759,7 @@ function displayResult(data) {
             </div>
             <div class="score-circle">
                 <span class="score-value">${Math.round(score)}</span>
-                <span class="score-label">/100</span>
+                <span class="score-label"></span>
             </div>
         </div>
         
