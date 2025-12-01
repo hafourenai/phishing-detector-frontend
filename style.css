@@ -701,7 +701,10 @@ input[type="text"]:focus {
     margin: 0;
 }
 
+<<<<<<< HEAD
 /* Responsive Design untuk Disclaimer */
+=======
+>>>>>>> 20419a3b1d8d7141978d3b21a1941bbe9e846840
 @media (max-width: 768px) {
     .disclaimer-box {
         padding: 1rem;
@@ -716,6 +719,7 @@ input[type="text"]:focus {
         font-size: 0.8rem;
     }
 }
+<<<<<<< HEAD
 
 /* Add these styles to your existing style.css */
 
@@ -887,3 +891,5 @@ input[type="text"]:focus {
         font-size: 1.5em;
     }
 }
+=======
+>>>>>>> 20419a3b1d8d7141978d3b21a1941bbe9e846840
