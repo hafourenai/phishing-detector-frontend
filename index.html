@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Detection System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header-card">
+            <div class="logo">
+                <i data-lucide="shield-check" class="shield-icon"></i>
+                <h1>Phishing Detector by Hafourenai</h1>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-bar">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="urlInput" placeholder="Enter Website URL">
+                <button id="scanBtn">
+                    Scan <i data-lucide="lock" class="lock-icon"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Section (Hidden by default) -->
+        <main id="resultsSection" class="results-grid" style="display: none;">
+            <!-- Detection Output Card -->
+            <div class="main-results">
+                <div class="card result-card" id="outputCard">
+                    <div class="card-header">
+                        <h2>Detection Output</h2>
+                    </div>
+                    <div class="result-content">
+                        <div class="status-info">
+                            <div class="status-badge" id="statusBadge">
+                                <i data-lucide="check-circle" id="statusIcon"></i>
+                                <span id="statusText">SAFE</span>
+                            </div>
+                            <div class="risk-score">
+                                <span class="label">RISK SCORE:</span>
+                                <span class="value" id="riskScore">15%</span>
+                            </div>
+                            <p class="analysis-text" id="analysisText">
+                                Analysis: Normal domain age, valid SSL certificate.
+                            </p>
+                        </div>
+                        <div class="gauge-container">
+                            <div class="gauge">
+                                <div class="gauge__body">
+                                    <div class="gauge__fill" id="gaugeFill"></div>
+                                    <div class="gauge__cover" id="gaugeValue">15%</div>
+                                </div>
+                            </div>
+                            <span class="gauge-label">Risk Level</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Reasons Card -->
+                <div class="card reasons-card" id="reasonsCard">
+                    <div class="card-header">
+                        <h2>Analysis Reasons</h2>
+                    </div>
+                    <div class="reasons-content">
+                        <ul id="reasonsList" class="reasons-list">
+                            <!-- Populated by script.js -->
+                            <li class="empty-reason">No significant threats detected.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threat Indicators Sidebar -->
+            <aside class="indicators-aside">
+                <div class="card indicators-card">
+                    <div class="card-header">
+                        <h2>Threat Indicators</h2>
+                    </div>
+                    <div class="indicators-list">
+                        <div class="indicator-item">
+                            <div class="indicator-labels">
+                                <span>Domain Age</span>
+                                <span class="indicator-value" id="domainAgeValue">0%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar green" id="domainAgeBar" style="width: 20%;"></div>
+                            </div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-labels">
+                                <span>URL Length</span>
+                                <span class="indicator-value" id="urlLengthValue">0%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar yellow" id="urlLengthBar" style="width: 40%;"></div>
+                            </div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-labels">
+                                <span>SSL Status</span>
+                                <span class="indicator-value" id="sslStatusValue">0%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar red" id="sslStatusBar" style="width: 80%;"></div>
+                            </div>
+                        </div>
+                        <div class="indicator-item">
+                            <div class="indicator-labels">
+                                <span>Content Analysis</span>
+                                <span class="indicator-value" id="contentAnalysisValue">0%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar orange" id="contentAnalysisBar" style="width: 60%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External API Results -->
+                <div class="card api-results-card">
+                    <div class="card-header">
+                        <h2>External API Results</h2>
+                    </div>
+                    <div class="api-status-list">
+                        <div class="api-status-item">
+                            <div class="api-info">
+                                <span class="api-name">Virus Total </span>
+                                <span class="api-provider">Virustotal APIKey</span>
+                            </div>
+                            <div class="api-status" id="mlStatus">
+                                <span class="badge">CLEAN</span>
+                                <i data-lucide="check-circle" class="check-icon"></i>
+                            </div>
+                        </div>
+                        <div class="api-status-item">
+                            <div class="api-info">
+                                <span class="api-name">SSL Verification</span>
+                                <span class="api-provider">GlobalTrust Auth</span>
+                            </div>
+                            <div class="api-status" id="sslStatus">
+                                <span class="badge">CLEAN</span>
+                                <i data-lucide="check-circle" class="check-icon"></i>
+                            </div>
+                        </div>
+                        <div class="api-status-item">
+                            <div class="api-info">
+                                <span class="api-name">Domain WHOIS</span>
+                                <span class="api-provider">Registry Check</span>
+                            </div>
+                            <div class="api-status" id="whoisStatus">
+                                <span class="badge">CLEAN</span>
+                                <i data-lucide="check-circle" class="check-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Disclaimer Section -->
+        <section id="disclaimerSection" class="disclaimer-section" style="display: none;">
+            <div class="card disclaimer-card">
+                <div class="disclaimer-header">
+                    <i data-lucide="alert-triangle" class="warn-icon"></i>
+                    <h3>Important Notice</h3>
+                </div>
+                <p>
+                    Alat ini menyediakan deteksi phishing tingkat lanjut menggunakan berbagai API keamanan dan algoritma AI. Tidak ada alat yang 100% sempurna. Selalu berhati-hati dan jangan pernah memasukkan informasi sensitif di situs web yang mencurigakan.
+                </p>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing URL...</p>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer-card">
+            <p>
+                <strong>⚠️ Important Notice:</strong><br>
+                Alat ini menyediakan deteksi phishing tingkat lanjut menggunakan berbagai API keamanan dan algoritma AI. Meskipun akurasi kami mencapai 80%, tidak ada alat yang 100% sempurna. Selalu berhati-hati dan jangan pernah memasukkan informasi sensitif di situs web yang mencurigakan.
+            </p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
