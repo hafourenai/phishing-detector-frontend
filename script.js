@@ -109,6 +109,16 @@ document.addEventListener("DOMContentLoaded", () => {
       detections.find((d) => d.name === "ssl_detector")?.details || {};
     const whoisDetails =
       detections.find((d) => d.name === "whois_detector")?.details || {};
+    const vtResults =
+      detections.find((d) => d.name === "virustotal") || {};
+    const sbResults =
+      detections.find((d) => d.name === "safe_browsing") || {};
+    const ipqResults =
+      detections.find((d) => d.name === "ipqualityscore") || {};
+    const tgResults =
+      detections.find((d) => d.name === "telegram") || {};
+    const cntResults =
+      detections.find((d) => d.name === "content") || {};
 
     // SSL Status
     let sslVal = 10; // Default safe
@@ -153,12 +163,12 @@ document.addEventListener("DOMContentLoaded", () => {
     updateBarColor(domainAgeBar, ageVal);
 
     // Content Analysis
-    const contentVal = Math.round(data.confidence * 100);
+    const contentVal = Math.round(cntResults.score || 0);
     contentAnalysisBar.style.width = `${contentVal}%`;
     document.getElementById(
       "contentAnalysisValue"
     ).innerText = `${contentVal}%`;
-    updateBarColor(contentAnalysisBar, 100 - contentVal); // Lower confidence is higher risk
+    updateBarColor(contentAnalysisBar, contentVal);
 
     // Update Analysis Reasons
     reasonsList.innerHTML = "";
@@ -172,17 +182,23 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       totalIssues.forEach((issue) => {
         const li = document.createElement("li");
-        li.className = data.is_phishing ? "phishing-reason" : "safe-reason";
-        li.innerHTML = `<i data-lucide="${
-          data.is_phishing ? "alert-circle" : "shield"
-        }"></i> ${issue}`;
+        li.className = "phishing-reason";
+        li.innerHTML = `<i data-lucide="alert-circle"></i> ${issue}`;
         reasonsList.appendChild(li);
       });
     }
     lucide.createIcons();
 
     // Update External API Status
-    updateApiStatus(mlStatus, mlDetails.is_phishing !== true); // ML detector returns is_phishing
+    const vtStatus = document.getElementById("vtStatus");
+    const sbStatus = document.getElementById("sbStatus");
+    const ipqStatus = document.getElementById("ipqStatus");
+    const tgStatus = document.getElementById("tgStatus");
+
+    updateApiStatus(vtStatus, (vtResults.score || 0) < 10);
+    updateApiStatus(sbStatus, (sbResults.score || 0) < 1);
+    updateApiStatus(ipqStatus, (ipqResults.score || 0) < 50);
+    updateApiStatus(tgStatus, (tgResults.score || 0) < 10);
     updateApiStatus(sslStatus, sslDetails.has_ssl === true);
     updateApiStatus(whoisStatus, whoisDetails.age_years !== undefined);
 
