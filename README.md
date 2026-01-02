@@ -1,4 +1,4 @@
-# Phishing Detector Web UI
+# Phishing Detector Web Frontend
 
 This repository provides a simple web-based user interface for the phishing detection system.
 
