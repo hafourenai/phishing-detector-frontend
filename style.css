@@ -47,7 +47,7 @@ body {
 /* Header */
 .header-card {
     background: rgba(255, 255, 255, 0.9);
-    border-radius: 35px;
+    border-radius: 25px;
     padding: 1.5rem 2rem;
     box-shadow: var(--card-shadow);
     position: sticky;

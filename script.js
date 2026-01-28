@@ -19,18 +19,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const sslStatus = document.getElementById("sslStatus");
   const whoisStatus = document.getElementById("whoisStatus");
 
+  // Progress Bars
+  const domainAgeBar = document.getElementById("domainAgeBar");
+  const urlLengthBar = document.getElementById("urlLengthBar");
+  const sslStatusBar = document.getElementById("sslStatusBar");
+  const contentAnalysisBar = document.getElementById("contentAnalysisBar");
+
   // API Configuration
   // Uses local backend for development, Railway backend for production
   const API_BASE_URL =
     window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === ""
       ? "http://127.0.0.1:5000"
       : "https://phishing-detector-backend.up.railway.app";
 
   scanBtn.addEventListener("click", async () => {
     const url = urlInput.value.trim();
     if (!url) {
-      alert("Please enter a URL to scan.");
+      alert("Silakan masukkan URL untuk dipindai.");
       return;
     }
 
@@ -57,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error(error);
       alert(
-        "An error occurred during scanning. Please ensure the backend is running."
+        "Terjadi kesalahan saat pemindaian. Pastikan backend sudah berjalan."
       );
     } finally {
       loading.style.display = "none";
@@ -87,14 +94,14 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       statusBadge.classList.add("safe");
       statusBadge.classList.remove("phishing");
-      statusText.innerText = "SAFE";
+      statusText.innerText = "AMAN";
       statusIcon.setAttribute("data-lucide", "check-circle");
       riskScoreValue.style.color = "#22c55e";
     }
     lucide.createIcons();
 
     riskScoreValue.innerText = `${score}%`;
-    analysisText.innerText = `Recommendation: ${data.recommendation}`;
+    analysisText.innerText = `Rekomendasi: ${data.recommendation}`;
 
     // Update Gauge
     const rotation = (score / 100) * 0.5;
@@ -125,12 +132,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let sslText = "Valid";
     if (!sslDetails.has_ssl) {
       sslVal = 100;
-      sslText = "No SSL / Expired";
+      sslText = "Tanpa SSL / Kedaluwarsa";
     } else if (sslDetails.days_remaining < 30) {
       sslVal = 70;
-      sslText = `${sslDetails.days_remaining} days left`;
+      sslText = `${sslDetails.days_remaining} hari tersisa`;
     } else {
-      sslText = `${sslDetails.days_remaining} days left`;
+      sslText = `${sslDetails.days_remaining} hari tersisa`;
     }
     sslStatusBar.style.width = `${sslVal}%`;
     document.getElementById("sslStatusValue").innerText = sslText;
@@ -141,21 +148,21 @@ document.addEventListener("DOMContentLoaded", () => {
     urlLengthBar.style.width = `${urlLenImpact}%`;
     document.getElementById(
       "urlLengthValue"
-    ).innerText = `${data.url.length} chars`;
+    ).innerText = `${data.url.length} kar`;
     updateBarColor(urlLengthBar, urlLenImpact);
 
     // Domain Age
     let ageVal = 15;
-    let ageText = "Old";
+    let ageText = "Lama";
     if (whoisDetails.age_years !== undefined) {
       const years = whoisDetails.age_years;
       ageText =
         years < 1
-          ? `${Math.round(whoisDetails.age_days)} days`
-          : `${years.toFixed(1)} years`;
+          ? `${Math.round(whoisDetails.age_days)} hari`
+          : `${years.toFixed(1)} tahun`;
       ageVal = years < 0.5 ? 90 : years < 1 ? 50 : 10;
     } else {
-      ageText = "Unknown";
+      ageText = "Tidak Diketahui";
       ageVal = 40;
     }
     domainAgeBar.style.width = `${ageVal}%`;
@@ -177,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (totalIssues.length === 0) {
       const li = document.createElement("li");
       li.className = "empty-reason";
-      li.innerHTML = '<i data-lucide="info"></i> No significant threats detected.';
+      li.innerHTML = '<i data-lucide="info"></i> Tidak ada ancaman signifikan yang terdeteksi.';
       reasonsList.appendChild(li);
     } else {
       totalIssues.forEach((issue) => {
@@ -195,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ipqStatus = document.getElementById("ipqStatus");
     const tgStatus = document.getElementById("tgStatus");
 
-    updateApiStatus(vtStatus, (vtResults.score || 0) < 10);
+    updateApiStatus(vtStatus, (vtResults.score || 0) < 1);
     updateApiStatus(sbStatus, (sbResults.score || 0) < 1);
     updateApiStatus(ipqStatus, (ipqResults.score || 0) < 50);
     updateApiStatus(tgStatus, (tgResults.score || 0) < 10);
@@ -213,11 +220,11 @@ document.addEventListener("DOMContentLoaded", () => {
     element.classList.remove("clean", "suspicious");
     if (isClean) {
       element.classList.add("clean");
-      badge.innerText = "CLEAN";
+      badge.innerText = "BERSIH";
       icon.setAttribute("data-lucide", "check-circle");
     } else {
       element.classList.add("suspicious");
-      badge.innerText = "SUSPICIOUS";
+      badge.innerText = "MENCURIGAKAN";
       icon.setAttribute("data-lucide", "alert-circle");
     }
   }
