@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Reset UI
     resultsSection.style.display = "none";
+    resetApiUI();
     loading.style.display = "flex";
 
     try {
@@ -197,36 +198,44 @@ document.addEventListener("DOMContentLoaded", () => {
     lucide.createIcons();
 
     // Update External API Status
-    const vtStatus = document.getElementById("vtStatus");
-    const sbStatus = document.getElementById("sbStatus");
-    const ipqStatus = document.getElementById("ipqStatus");
-    const tgStatus = document.getElementById("tgStatus");
+    const vtStatusEl = document.getElementById("vtStatus");
+    const sbStatusEl = document.getElementById("sbStatus");
+    const ipqStatusEl = document.getElementById("ipqStatus");
+    const tgStatusEl = document.getElementById("tgStatus");
+    const sslStatusEl = document.getElementById("sslStatus");
+    const whoisStatusEl = document.getElementById("whoisStatus");
 
-    updateApiStatus(vtStatus, (vtResults.score || 0) < 1);
-    updateApiStatus(sbStatus, (sbResults.score || 0) < 1);
-    updateApiStatus(ipqStatus, (ipqResults.score || 0) < 50);
-    updateApiStatus(tgStatus, (tgResults.score || 0) < 10);
-    updateApiStatus(sslStatus, sslDetails.has_ssl === true);
-    updateApiStatus(whoisStatus, whoisDetails.age_years !== undefined);
+    updateApiStatus(vtStatusEl, (vtResults.score || 0) < 1);
+    updateApiStatus(sbStatusEl, (sbResults.score || 0) < 1);
+    updateApiStatus(ipqStatusEl, (ipqResults.score || 0) < 50);
+    updateApiStatus(tgStatusEl, (tgResults.score || 0) < 10);
+    updateApiStatus(sslStatusEl, sslDetails.has_ssl === true);
+    updateApiStatus(whoisStatusEl, whoisDetails.age_years !== undefined);
 
     // Show Disclaimer
     disclaimerSection.style.display = "block";
   }
 
-  function updateApiStatus(element, isClean) {
-    const badge = element.querySelector(".badge");
-    const icon = element.querySelector("i");
+  function resetApiUI() {
+    const apiItems = document.querySelectorAll(".api-status-item");
+    apiItems.forEach(item => {
+      const statusIcon = item.querySelector(".api-status");
+      statusIcon.className = "api-status processing";
+      statusIcon.innerHTML = `<span class="badge">PROSES</span><i data-lucide="loader-2" class="spin"></i>`;
+    });
+    lucide.createIcons();
+  }
 
-    element.classList.remove("clean", "suspicious");
+  function updateApiStatus(element, isClean) {
+    const statusIcon = element.querySelector(".api-status");
+    statusIcon.className = isClean ? "api-status clean" : "api-status suspicious";
+    
     if (isClean) {
-      element.classList.add("clean");
-      badge.innerText = "BERSIH";
-      icon.setAttribute("data-lucide", "check-circle");
+        statusIcon.innerHTML = `<span class="badge">BERSIH</span><i data-lucide="check-circle"></i>`;
     } else {
-      element.classList.add("suspicious");
-      badge.innerText = "MENCURIGAKAN";
-      icon.setAttribute("data-lucide", "alert-circle");
+        statusIcon.innerHTML = `<span class="badge">RISIKO</span><i data-lucide="alert-circle"></i>`;
     }
+    lucide.createIcons();
   }
 
   function updateBarColor(bar, value) {

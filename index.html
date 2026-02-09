@@ -32,38 +32,38 @@
 
         <!-- Results Section -->
         <main id="resultsSection" class="results-grid" style="display: none;">
-            <div class="main-results">
-                <!-- Status Card -->
-                <article class="card result-card" id="outputCard">
-                    <div class="card-header">
-                        <h2><i data-lucide="activity"></i> Hasil Analisis Terkini</h2>
-                    </div>
-                    <div class="result-content">
-                        <div class="status-info">
-                            <div class="status-badge" id="statusBadge">
-                                <i data-lucide="check-circle" id="statusIcon"></i>
-                                <span id="statusText">AMAN</span>
-                            </div>
-                            <div class="risk-score">
-                                <span class="label">Skor Risiko:</span>
-                                <span class="value" id="riskScore">0%</span>
-                            </div>
-                            <p class="analysis-text" id="analysisText">
-                                Masukkan URL untuk memulai analisis keamanan tingkat lanjut.
-                            </p>
+            <!-- Status Card (Spans Full Width) -->
+            <article class="card result-card" id="outputCard">
+                <div class="card-header">
+                    <h2><i data-lucide="activity"></i> Hasil Analisis Terkini</h2>
+                </div>
+                <div class="result-content">
+                    <div class="status-info">
+                        <div class="status-badge" id="statusBadge">
+                            <i data-lucide="check-circle" id="statusIcon"></i>
+                            <span id="statusText">AMAN</span>
                         </div>
-                        <div class="gauge-container">
-                            <div class="gauge">
-                                <div class="gauge__body">
-                                    <div class="gauge__fill" id="gaugeFill"></div>
-                                    <div class="gauge__cover" id="gaugeValue">0%</div>
-                                </div>
-                            </div>
-                            <span class="gauge-label">Tingkat Risiko</span>
+                        <div class="risk-score">
+                            <span class="label">Skor Risiko:</span>
+                            <span class="value" id="riskScore">0%</span>
                         </div>
+                        <p class="analysis-text" id="analysisText">
+                            Masukkan URL untuk memulai analisis keamanan tingkat lanjut.
+                        </p>
                     </div>
-                </article>
+                    <div class="gauge-container">
+                        <div class="gauge">
+                            <div class="gauge__body">
+                                <div class="gauge__fill" id="gaugeFill"></div>
+                                <div class="gauge__cover" id="gaugeValue">0%</div>
+                            </div>
+                        </div>
+                        <span class="gauge-label">Tingkat Risiko</span>
+                    </div>
+                </div>
+            </article>
 
+            <div class="main-results">
                 <!-- Analysis Details -->
                 <article class="card reasons-card" id="reasonsCard">
                     <div class="card-header">
@@ -78,10 +78,8 @@
                         </ul>
                     </div>
                 </article>
-            </div>
 
-            <!-- Indicators & API results -->
-            <aside class="indicators-aside">
+                <!-- Security Indicators (Moved here for better layout balance) -->
                 <section class="card indicators-card">
                     <div class="card-header">
                         <h2><i data-lucide="bar-chart-3"></i> Indikator Keamanan</h2>
@@ -125,40 +123,79 @@
                         </div>
                     </div>
                 </section>
+            </div>
 
+            <!-- Side column now only contains Multi-API results -->
+            <aside class="indicators-aside">
                 <section class="card api-results-card">
                     <div class="card-header">
                         <h2><i data-lucide="globe"></i> Pemindaian Multi-API</h2>
                     </div>
                     <div class="api-status-list">
+                        <!-- Virus Total -->
                         <div class="api-status-item" id="vtStatus">
                             <div class="api-info">
                                 <span class="api-name">Virus Total</span>
                                 <span class="api-provider">Security Engine</span>
                             </div>
-                            <div class="api-status clean">
-                                <span class="badge">PROSES</span>
-                                <i data-lucide="loader-2" class="spin"></i>
+                            <div class="api-status waiting">
+                                <span class="badge">MENUNGGU</span>
+                                <i data-lucide="clock"></i>
                             </div>
                         </div>
+                        <!-- Safe Browsing -->
                         <div class="api-status-item" id="sbStatus">
                             <div class="api-info">
                                 <span class="api-name">Safe Browsing</span>
                                 <span class="api-provider">Google Cloud</span>
                             </div>
-                            <div class="api-status clean">
-                                <span class="badge">PROSES</span>
-                                <i data-lucide="loader-2" class="spin"></i>
+                            <div class="api-status waiting">
+                                <span class="badge">MENUNGGU</span>
+                                <i data-lucide="clock"></i>
                             </div>
                         </div>
+                        <!-- IP Quality Score -->
                         <div class="api-status-item" id="ipqStatus">
                             <div class="api-info">
                                 <span class="api-name">IP Quality</span>
                                 <span class="api-provider">Fraud Detection</span>
                             </div>
-                            <div class="api-status clean">
-                                <span class="badge">PROSES</span>
-                                <i data-lucide="loader-2" class="spin"></i>
+                            <div class="api-status waiting">
+                                <span class="badge">MENUNGGU</span>
+                                <i data-lucide="clock"></i>
+                            </div>
+                        </div>
+                        <!-- Bot Telegram -->
+                        <div class="api-status-item" id="tgStatus">
+                            <div class="api-info">
+                                <span class="api-name">Telegram Bot</span>
+                                <span class="api-provider">Bot Analysis</span>
+                            </div>
+                            <div class="api-status waiting">
+                                <span class="badge">MENUNGGU</span>
+                                <i data-lucide="clock"></i>
+                            </div>
+                        </div>
+                        <!-- SSL Verification -->
+                        <div class="api-status-item" id="sslStatus">
+                            <div class="api-info">
+                                <span class="api-name">SSL Verify</span>
+                                <span class="api-provider">GlobalTrust</span>
+                            </div>
+                            <div class="api-status waiting">
+                                <span class="badge">MENUNGGU</span>
+                                <i data-lucide="clock"></i>
+                            </div>
+                        </div>
+                        <!-- WHOIS Domain -->
+                        <div class="api-status-item" id="whoisStatus">
+                            <div class="api-info">
+                                <span class="api-name">WHOIS Domain</span>
+                                <span class="api-provider">Registry Check</span>
+                            </div>
+                            <div class="api-status waiting">
+                                <span class="badge">MENUNGGU</span>
+                                <i data-lucide="clock"></i>
                             </div>
                         </div>
                     </div>
