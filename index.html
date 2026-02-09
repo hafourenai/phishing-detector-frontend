@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phishing Detection System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Phishing Detector — Modern Security Analysis</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
@@ -14,7 +14,7 @@
         <header class="header-card">
             <div class="logo">
                 <i data-lucide="shield-check" class="shield-icon"></i>
-                <h1>Phishing Detector by Hafourenai</h1>
+                <h1>Phishing Detector</h1>
             </div>
         </header>
 
@@ -22,20 +22,21 @@
         <section class="search-section">
             <div class="search-bar">
                 <i data-lucide="search" class="search-icon"></i>
-                <input type="text" id="urlInput" placeholder="Masukkan URL Situs Web">
+                <input type="url" id="urlInput" placeholder="Masukkan URL situs web (misal: https://google.com)" aria-label="Input URL">
                 <button id="scanBtn">
-                    Pindai <i data-lucide="lock" class="lock-icon"></i>
+                    <span>Pindai Sekarang</span>
+                    <i data-lucide="zap" class="zap-icon"></i>
                 </button>
             </div>
         </section>
 
-        <!-- Results Section (Hidden by default) -->
+        <!-- Results Section -->
         <main id="resultsSection" class="results-grid" style="display: none;">
-            <!-- Detection Output Card -->
             <div class="main-results">
-                <div class="card result-card" id="outputCard">
+                <!-- Status Card -->
+                <article class="card result-card" id="outputCard">
                     <div class="card-header">
-                        <h2>Hasil Deteksi</h2>
+                        <h2><i data-lucide="activity"></i> Hasil Analisis Terkini</h2>
                     </div>
                     <div class="result-content">
                         <div class="status-info">
@@ -44,181 +45,151 @@
                                 <span id="statusText">AMAN</span>
                             </div>
                             <div class="risk-score">
-                                <span class="label">SKOR RISIKO:</span>
-                                <span class="value" id="riskScore">15%</span>
+                                <span class="label">Skor Risiko:</span>
+                                <span class="value" id="riskScore">0%</span>
                             </div>
                             <p class="analysis-text" id="analysisText">
-                                Analisis: Usia domain normal, sertifikat SSL valid.
+                                Masukkan URL untuk memulai analisis keamanan tingkat lanjut.
                             </p>
                         </div>
                         <div class="gauge-container">
                             <div class="gauge">
                                 <div class="gauge__body">
                                     <div class="gauge__fill" id="gaugeFill"></div>
-                                    <div class="gauge__cover" id="gaugeValue">15%</div>
+                                    <div class="gauge__cover" id="gaugeValue">0%</div>
                                 </div>
                             </div>
                             <span class="gauge-label">Tingkat Risiko</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
-                <!-- Analysis Reasons Card -->
-                <div class="card reasons-card" id="reasonsCard">
+                <!-- Analysis Details -->
+                <article class="card reasons-card" id="reasonsCard">
                     <div class="card-header">
-                        <h2>Alasan Analisis</h2>
+                        <h2><i data-lucide="list-checks"></i> Detail Temuan</h2>
                     </div>
                     <div class="reasons-content">
                         <ul id="reasonsList" class="reasons-list">
-                            <!-- Populated by script.js -->
-                            <li class="empty-reason">Tidak ada ancaman signifikan yang terdeteksi.</li>
+                            <li class="empty-reason">
+                                <i data-lucide="info"></i>
+                                Menunggu input URL...
+                            </li>
                         </ul>
                     </div>
-                </div>
+                </article>
             </div>
 
-            <!-- Threat Indicators Sidebar -->
+            <!-- Indicators & API results -->
             <aside class="indicators-aside">
-                <div class="card indicators-card">
+                <section class="card indicators-card">
                     <div class="card-header">
-                        <h2>Indikator Ancaman</h2>
+                        <h2><i data-lucide="bar-chart-3"></i> Indikator Keamanan</h2>
                     </div>
                     <div class="indicators-list">
                         <div class="indicator-item">
                             <div class="indicator-labels">
                                 <span>Usia Domain</span>
-                                <span class="indicator-value" id="domainAgeValue">0%</span>
+                                <span class="indicator-value" id="domainAgeValue">-</span>
                             </div>
                             <div class="progress-container">
-                                <div class="progress-bar green" id="domainAgeBar" style="width: 20%;"></div>
+                                <div class="progress-bar" id="domainAgeBar" style="width: 0%;"></div>
                             </div>
                         </div>
                         <div class="indicator-item">
                             <div class="indicator-labels">
                                 <span>Panjang URL</span>
-                                <span class="indicator-value" id="urlLengthValue">0%</span>
+                                <span class="indicator-value" id="urlLengthValue">-</span>
                             </div>
                             <div class="progress-container">
-                                <div class="progress-bar yellow" id="urlLengthBar" style="width: 40%;"></div>
+                                <div class="progress-bar" id="urlLengthBar" style="width: 0%;"></div>
                             </div>
                         </div>
                         <div class="indicator-item">
                             <div class="indicator-labels">
                                 <span>Status SSL</span>
-                                <span class="indicator-value" id="sslStatusValue">0%</span>
+                                <span class="indicator-value" id="sslStatusValue">-</span>
                             </div>
                             <div class="progress-container">
-                                <div class="progress-bar red" id="sslStatusBar" style="width: 80%;"></div>
+                                <div class="progress-bar" id="sslStatusBar" style="width: 0%;"></div>
                             </div>
                         </div>
                         <div class="indicator-item">
                             <div class="indicator-labels">
                                 <span>Analisis Konten</span>
-                                <span class="indicator-value" id="contentAnalysisValue">0%</span>
+                                <span class="indicator-value" id="contentAnalysisValue">-</span>
                             </div>
                             <div class="progress-container">
-                                <div class="progress-bar orange" id="contentAnalysisBar" style="width: 60%;"></div>
+                                <div class="progress-bar" id="contentAnalysisBar" style="width: 0%;"></div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- External API Results -->
-                <div class="card api-results-card">
+                <section class="card api-results-card">
                     <div class="card-header">
-                        <h2>Hasil API Eksternal</h2>
+                        <h2><i data-lucide="globe"></i> Pemindaian Multi-API</h2>
                     </div>
                     <div class="api-status-list">
-                        <div class="api-status-item">
+                        <div class="api-status-item" id="vtStatus">
                             <div class="api-info">
                                 <span class="api-name">Virus Total</span>
-                                <span class="api-provider">Mesin Keamanan</span>
+                                <span class="api-provider">Security Engine</span>
                             </div>
-                            <div class="api-status clean" id="vtStatus">
-                                <span class="badge">BERSIH</span>
-                                <i data-lucide="check-circle" class="check-icon"></i>
+                            <div class="api-status clean">
+                                <span class="badge">PROSES</span>
+                                <i data-lucide="loader-2" class="spin"></i>
                             </div>
                         </div>
-                        <div class="api-status-item">
+                        <div class="api-status-item" id="sbStatus">
                             <div class="api-info">
                                 <span class="api-name">Safe Browsing</span>
-                                <span class="api-provider">Keamanan Google</span>
+                                <span class="api-provider">Google Cloud</span>
                             </div>
-                            <div class="api-status clean" id="sbStatus">
-                                <span class="badge">BERSIH</span>
-                                <i data-lucide="check-circle" class="check-icon"></i>
-                            </div>
-                        </div>
-                        <div class="api-status-item">
-                            <div class="api-info">
-                                <span class="api-name">IP Quality Score</span>
-                                <span class="api-provider">Deteksi Penipuan</span>
-                            </div>
-                            <div class="api-status clean" id="ipqStatus">
-                                <span class="badge">BERSIH</span>
-                                <i data-lucide="check-circle" class="check-icon"></i>
+                            <div class="api-status clean">
+                                <span class="badge">PROSES</span>
+                                <i data-lucide="loader-2" class="spin"></i>
                             </div>
                         </div>
-                        <div class="api-status-item">
+                        <div class="api-status-item" id="ipqStatus">
                             <div class="api-info">
-                                <span class="api-name">Bot Telegram</span>
-                                <span class="api-provider">Analisis Bot</span>
+                                <span class="api-name">IP Quality</span>
+                                <span class="api-provider">Fraud Detection</span>
                             </div>
-                            <div class="api-status clean" id="tgStatus">
-                                <span class="badge">BERSIH</span>
-                                <i data-lucide="check-circle" class="check-icon"></i>
-                            </div>
-                        </div>
-                        <div class="api-status-item">
-                            <div class="api-info">
-                                <span class="api-name">Verifikasi SSL</span>
-                                <span class="api-provider">Autentikasi GlobalTrust</span>
-                            </div>
-                            <div class="api-status clean" id="sslStatus">
-                                <span class="badge">BERSIH</span>
-                                <i data-lucide="check-circle" class="check-icon"></i>
-                            </div>
-                        </div>
-                        <div class="api-status-item">
-                            <div class="api-info">
-                                <span class="api-name">WHOIS Domain</span>
-                                <span class="api-provider">Pemeriksaan Registri</span>
-                            </div>
-                            <div class="api-status clean" id="whoisStatus">
-                                <span class="badge">BERSIH</span>
-                                <i data-lucide="check-circle" class="check-icon"></i>
+                            <div class="api-status clean">
+                                <span class="badge">PROSES</span>
+                                <i data-lucide="loader-2" class="spin"></i>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </aside>
         </main>
 
-        <!-- Disclaimer Section -->
+        <!-- Disclaimer -->
         <section id="disclaimerSection" class="disclaimer-section" style="display: none;">
             <div class="card disclaimer-card">
                 <div class="disclaimer-header">
-                    <i data-lucide="alert-triangle" class="warn-icon"></i>
-                    <h3>Pemberitahuan Penting</h3>
+                    <i data-lucide="alert-circle" class="warn-icon"></i>
+                    <h3>Pemberitahuan Keamanan</h3>
                 </div>
                 <p>
-                    Alat ini menyediakan deteksi phishing tingkat lanjut menggunakan berbagai API keamanan dan algoritma AI. Tidak ada alat yang 100% sempurna. Selalu berhati-hati dan jangan pernah memasukkan informasi sensitif di situs web yang mencurigakan.
+                    Analisis ini dihasilkan oleh integrasi Machine Learning dan API keamanan pihak ketiga. Meskipun akurasinya tinggi, selalu gunakan akal sehat Anda sebelum memasukkan data pribadi di situs apa pun.
                 </p>
             </div>
         </section>
 
-        <!-- Loading State -->
+        <!-- Loading -->
         <div id="loading" class="loading-overlay" style="display: none;">
             <div class="spinner"></div>
-            <p>Menganalisis URL...</p>
+            <p>Menganalisis arsitektur URL...</p>
         </div>
 
         <!-- Footer -->
         <footer class="footer-card">
             <p>
-                <strong>⚠️ Penting</strong><br>
-                Alat ini menyediakan deteksi phishing tingkat lanjut menggunakan berbagai API keamanan dan Integrasi Machine Learning. Deteksi bisa saja salah.
-                Tidak ada alat yang 100% sempurna. Selalu berhati-hati dan jangan pernah memasukkan informasi sensitif di situs web yang mencurigakan.
+                <strong>© 2026 Phishing Detector by Hafourenai</strong><br>
+                Diperkuat dengan Machine Learning untuk deteksi ancaman real-time.
             </p>
         </footer>
     </div>
