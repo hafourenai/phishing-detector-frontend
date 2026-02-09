@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.hostname === "127.0.0.1" ||
     window.location.hostname === ""
       ? "http://127.0.0.1:5000"
-      : "https://phishing-detector-backend.up.railway.app";
+      : "https://hafourenai-phishing-detector-backend.hf.space";
 
   scanBtn.addEventListener("click", async () => {
     const url = urlInput.value.trim();
