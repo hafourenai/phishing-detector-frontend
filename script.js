@@ -26,7 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const contentAnalysisBar = document.getElementById("contentAnalysisBar");
 
   // API Configuration
-  // Uses local backend for development, Railway backend for production
   const API_BASE_URL =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1" ||
@@ -41,7 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Reset UI
     resultsSection.style.display = "none";
     resetApiUI();
     loading.style.display = "flex";
@@ -104,12 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
     riskScoreValue.innerText = `${score}%`;
     analysisText.innerText = `Rekomendasi: ${data.recommendation}`;
 
-    // Update Gauge
     const rotation = (score / 100) * 0.5;
     gaugeFill.style.transform = `rotate(${rotation}turn)`;
     document.getElementById("gaugeValue").innerText = `${score}%`;
-
-    // Update Indicators
     const detections = data.detections || [];
     const mlDetails =
       detections.find((d) => d.name === "ml_detector")?.details || {};
@@ -128,8 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cntResults =
       detections.find((d) => d.name === "content") || {};
 
-    // SSL Status
-    let sslVal = 10; // Default safe
+    let sslVal = 10;
     let sslText = "Valid";
     if (!sslDetails.has_ssl) {
       sslVal = 100;
@@ -144,7 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("sslStatusValue").innerText = sslText;
     updateBarColor(sslStatusBar, sslVal);
 
-    // URL Length
     const urlLenImpact = Math.min((data.url.length / 100) * 100, 100);
     urlLengthBar.style.width = `${urlLenImpact}%`;
     document.getElementById(
@@ -152,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ).innerText = `${data.url.length} kar`;
     updateBarColor(urlLengthBar, urlLenImpact);
 
-    // Domain Age
     let ageVal = 15;
     let ageText = "Lama";
     if (whoisDetails.age_years !== undefined) {
@@ -170,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("domainAgeValue").innerText = ageText;
     updateBarColor(domainAgeBar, ageVal);
 
-    // Content Analysis
     const contentVal = Math.round(cntResults.score || 0);
     contentAnalysisBar.style.width = `${contentVal}%`;
     document.getElementById(
@@ -178,7 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ).innerText = `${contentVal}%`;
     updateBarColor(contentAnalysisBar, contentVal);
 
-    // Update Analysis Reasons
     reasonsList.innerHTML = "";
     const totalIssues = data.total_issues || [];
 
@@ -197,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     lucide.createIcons();
 
-    // Update External API Status
     const vtStatusEl = document.getElementById("vtStatus");
     const sbStatusEl = document.getElementById("sbStatus");
     const ipqStatusEl = document.getElementById("ipqStatus");
@@ -212,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateApiStatus(sslStatusEl, sslDetails.has_ssl === true);
     updateApiStatus(whoisStatusEl, whoisDetails.age_years !== undefined);
 
-    // Show Disclaimer
     disclaimerSection.style.display = "block";
   }
 

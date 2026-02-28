@@ -18,7 +18,6 @@
             </div>
         </header>
 
-        <!-- Search Section -->
         <section class="search-section">
             <div class="search-bar">
                 <i data-lucide="search" class="search-icon"></i>
@@ -30,9 +29,7 @@
             </div>
         </section>
 
-        <!-- Results Section -->
         <main id="resultsSection" class="results-grid" style="display: none;">
-            <!-- Status Card (Spans Full Width) -->
             <article class="card result-card" id="outputCard">
                 <div class="card-header">
                     <h2><i data-lucide="activity"></i> Hasil Analisis Terkini</h2>
@@ -64,7 +61,6 @@
             </article>
 
             <div class="main-results">
-                <!-- Analysis Details -->
                 <article class="card reasons-card" id="reasonsCard">
                     <div class="card-header">
                         <h2><i data-lucide="list-checks"></i> Detail Temuan</h2>
@@ -79,7 +75,6 @@
                     </div>
                 </article>
 
-                <!-- Security Indicators (Moved here for better layout balance) -->
                 <section class="card indicators-card">
                     <div class="card-header">
                         <h2><i data-lucide="bar-chart-3"></i> Indikator Keamanan</h2>
@@ -125,14 +120,12 @@
                 </section>
             </div>
 
-            <!-- Side column now only contains Multi-API results -->
             <aside class="indicators-aside">
                 <section class="card api-results-card">
                     <div class="card-header">
                         <h2><i data-lucide="globe"></i> Pemindaian Multi-API</h2>
                     </div>
                     <div class="api-status-list">
-                        <!-- Virus Total -->
                         <div class="api-status-item" id="vtStatus">
                             <div class="api-info">
                                 <span class="api-name">Virus Total</span>
@@ -143,7 +136,6 @@
                                 <i data-lucide="clock"></i>
                             </div>
                         </div>
-                        <!-- Safe Browsing -->
                         <div class="api-status-item" id="sbStatus">
                             <div class="api-info">
                                 <span class="api-name">Safe Browsing</span>
@@ -154,7 +146,6 @@
                                 <i data-lucide="clock"></i>
                             </div>
                         </div>
-                        <!-- IP Quality Score -->
                         <div class="api-status-item" id="ipqStatus">
                             <div class="api-info">
                                 <span class="api-name">IP Quality</span>
@@ -165,7 +156,6 @@
                                 <i data-lucide="clock"></i>
                             </div>
                         </div>
-                        <!-- Bot Telegram -->
                         <div class="api-status-item" id="tgStatus">
                             <div class="api-info">
                                 <span class="api-name">Telegram Bot</span>
@@ -176,7 +166,6 @@
                                 <i data-lucide="clock"></i>
                             </div>
                         </div>
-                        <!-- SSL Verification -->
                         <div class="api-status-item" id="sslStatus">
                             <div class="api-info">
                                 <span class="api-name">SSL Verify</span>
@@ -187,7 +176,6 @@
                                 <i data-lucide="clock"></i>
                             </div>
                         </div>
-                        <!-- WHOIS Domain -->
                         <div class="api-status-item" id="whoisStatus">
                             <div class="api-info">
                                 <span class="api-name">WHOIS Domain</span>
@@ -203,7 +191,6 @@
             </aside>
         </main>
 
-        <!-- Disclaimer -->
         <section id="disclaimerSection" class="disclaimer-section" style="display: none;">
             <div class="card disclaimer-card">
                 <div class="disclaimer-header">
@@ -216,7 +203,6 @@
             </div>
         </section>
 
-        <!-- Loading -->
         <div id="loading" class="loading-overlay" style="display: none;">
             <div class="spinner"></div>
             <p>Menganalisis arsitektur URL...</p>
